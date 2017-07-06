@@ -2,6 +2,5 @@ This demo app compiles Wikipedia information fetched using API calls into a desc
 
 It requires Android 4.4 (KitKat) or newer.
 
-![Overview screenshot](https://raw.githubusercontent.com/plweegie/piast-trail/master/Screenshots/Screenshot_2017-07-06-22-09-52.png)
 
-![Detail screenshot](https://raw.githubusercontent.com/plweegie/piast-trail/master/Screenshots/Screenshot_2017-07-06-22-10-38.png)
+<img src="https://raw.githubusercontent.com/plweegie/piast-trail/master/Screenshots/Screenshot_2017-07-06-22-09-52.png" width=400 /><img src="https://raw.githubusercontent.com/plweegie/piast-trail/master/Screenshots/Screenshot_2017-07-06-22-10-38.png" width=400/>
