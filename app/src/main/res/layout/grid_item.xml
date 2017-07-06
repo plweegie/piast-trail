@@ -1,0 +1,64 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<!-- Single entry in the grid: contains place name and picture -->
+
+<android.support.v7.widget.CardView
+    xmlns:card_view="http://schemas.android.com/apk/res-auto"
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    android:id="@+id/card_view"
+    android:layout_height="200dp"
+    android:layout_width="wrap_content"
+    card_view:cardUseCompatPadding="true"
+    card_view:cardCornerRadius="8dp">
+    
+    <RelativeLayout
+        android:layout_width="match_parent"
+        android:layout_height="match_parent">
+    
+        <ImageView
+            android:id="@+id/place_photo"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:scaleType="centerCrop" />
+        
+        <View
+            android:id="@+id/card_background"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:background="@drawable/card_gradient" />
+    
+        <TextView
+            android:id="@+id/place_name"
+            style="@style/PlaceNameStyle"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_alignParentRight="true"
+            android:layout_alignParentBottom="true"
+            android:paddingRight="8dp"
+            android:layout_marginBottom="8dp" />
+        
+        <ImageView
+            android:id="@+id/check_visited"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginLeft="8dp"
+            android:layout_marginTop="8dp"
+            android:layout_alignParentLeft="true"
+            android:layout_alignParentTop="true"
+            android:gravity="center"
+            android:src="@drawable/ic_done_white_24dp" />
+        
+        <TextView
+            android:id="@+id/visited_tv"
+            android:text="@string/visited_label"
+            android:textAllCaps="true"
+            android:textColor="@android:color/white"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="8dp"
+            android:layout_alignParentTop="true"
+            android:layout_centerHorizontal="true" />
+    
+    </RelativeLayout>
+
+</android.support.v7.widget.CardView>

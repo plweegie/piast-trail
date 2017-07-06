@@ -1,0 +1,31 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">Piast Trail</string>
+    
+    <!-- Names for places of interest -->
+    <string name="name_poznan">Poznań</string>
+    <string name="name_lednica">Ostrów Lednicki</string>
+    <string name="name_gniezno">Gniezno</string>
+    <string name="name_trzemeszno">Trzemeszno</string>
+    <string name="name_mogilno">Mogilno</string>
+    <string name="name_strzelno">Strzelno</string>
+    <string name="name_kruszwica">Kruszwica</string>
+    <string name="name_biskupin">Biskupin</string>
+    
+    <!-- Names of architectural and historical monuments -->
+    <string name="mon_poznan">Bazylika archikatedralna Świętych Apostołów Piotra i Pawła w Poznaniu</string>
+    <string name="mon_gniezno">Bazylika prymasowska Wniebowzięcia Najświętszej Maryi Panny w Gnieźnie</string>
+    <string name="mon_trzemeszno">Bazylika Wniebowzięcia Najświętszej Maryi Panny i św. Michała Archanioła w Trzemesznie</string>
+    <string name="mon_mogilno">Klasztor Benedyktynów w Mogilnie</string>
+    <string name="mon_strzelno">Rotunda św. Prokopa w Strzelnie</string>
+    <string name="mon_kruszwica">Mysia Wieża</string>
+    <string name="mon_biskupin">Biskupin (stanowisko archeologiczne)</string>
+    
+    <!-- If no Internet connection -->
+    <string name="empty_placeholder">No Internet connection.</string>
+    
+    <string name="visited_label">Visited</string>
+    <string name="visited_checkbox_label">I was there!</string>
+    
+    
+</resources>

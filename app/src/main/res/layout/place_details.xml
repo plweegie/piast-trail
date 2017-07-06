@@ -1,0 +1,66 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+Layout for a fragment presenting the place and its main attractions
+-->
+
+<ScrollView
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:layout_height="fill_parent"
+    android:layout_width="fill_parent">
+
+    <LinearLayout
+        android:id="@+id/place_layout"
+        android:layout_height="wrap_content"
+        android:layout_width="match_parent"
+        android:orientation="vertical">
+    
+        <ImageView
+            android:id="@+id/place_image_full"
+            android:layout_width="match_parent"
+            android:layout_height="500dp"
+            android:scaleType="centerCrop" />
+    
+        <TextView
+            android:id="@+id/place_caption_full"
+            style="@style/PlaceNameStyleFull"
+            android:layout_height="wrap_content"
+            android:layout_width="wrap_content"
+            android:layout_margin="16dp"
+            android:paddingLeft="16dp"
+            android:background="@drawable/left_border" />
+        
+        <CheckBox
+            android:id="@+id/visited_check_box"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_margin="16dp"
+            android:text="@string/visited_checkbox_label" />
+        
+        <ProgressBar
+            android:id="@+id/progress_bar"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            style="@style/Widget.AppCompat.ProgressBar.Horizontal" />
+                
+        <WebView
+            android:id="@+id/web_view"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent" />
+        
+        <TextView
+            android:id="@+id/place_backup_empty_view"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_gravity="center_horizontal" />
+        
+        <ProgressBar
+            android:id="@+id/indicator"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_gravity="center_horizontal"
+            style="@style/Widget.AppCompat.ProgressBar" />
+        
+    </LinearLayout>
+
+</ScrollView>
