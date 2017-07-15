@@ -23,10 +23,15 @@ SOFTWARE.
 */
 package com.example.android.piasttrail;
 
+import android.Manifest;
+import android.app.Dialog;
 import android.content.Context;
+import android.content.DialogInterface;
 import android.content.Intent;
+import android.content.pm.PackageManager;
 import android.content.res.Resources;
 import android.graphics.Bitmap;
+import android.location.Location;
 import android.net.ConnectivityManager;
 import android.net.NetworkInfo;
 import android.net.Uri;
@@ -34,8 +39,13 @@ import android.os.Bundle;
 import android.preference.PreferenceManager;
 import android.support.v4.app.LoaderManager;
 import android.support.v4.content.AsyncTaskLoader;
+import android.support.v4.content.ContextCompat;
 import android.support.v4.content.Loader;
 import android.support.v7.app.AppCompatActivity;
+import android.util.Log;
+import android.view.Menu;
+import android.view.MenuInflater;
+import android.view.MenuItem;
 import android.view.View;
 import android.webkit.WebChromeClient;
 import android.webkit.WebView;
@@ -45,8 +55,15 @@ import android.widget.CompoundButton;
 import android.widget.ImageView;
 import android.widget.ProgressBar;
 import android.widget.TextView;
+import android.widget.Toast;
 import com.example.android.piasttrail.utils.PictureUtils;
 import com.example.android.piasttrail.utils.QueryUtils;
+import com.google.android.gms.common.ConnectionResult;
+import com.google.android.gms.common.GoogleApiAvailability;
+import com.google.android.gms.common.api.GoogleApiClient;
+import com.google.android.gms.location.LocationListener;
+import com.google.android.gms.location.LocationRequest;
+import com.google.android.gms.location.LocationServices;
 
 /**
  *
@@ -56,17 +73,24 @@ public class PlaceDetailsActivity extends AppCompatActivity implements
         LoaderManager.LoaderCallbacks<String>{
     
     private static final String EXTRA_PLACE_POSITION = "place_position";
-    
+    private static final int REQUEST_ERROR = 0;
     private static final int WIKI_LOADER_ID = 1;
 
     private static final String LOG_TAG = PlaceDetailsActivity.class.getName();
     private static final String WIKI_REQUEST_URL = "https://pl.wikipedia.org/w/api.php";
+    
+    private static final String[] LOCATION_PERMISSIONS = new String[] {
+        Manifest.permission.ACCESS_FINE_LOCATION,
+        Manifest.permission.ACCESS_COARSE_LOCATION,
+    };
+    private static final int REQUEST_LOCATION_PERMISSIONS = 0;
     
     private TextView mBackupEmptyView;
     private ProgressBar mIndicator;
     private ConnectivityManager mConnManager;
     private Context mContext;
     private Resources mResources;
+    private GoogleApiClient mClient;
     
     private ImageView mPlaceImageViewFull;
     private TextView mPlaceCaption;
@@ -82,6 +106,21 @@ public class PlaceDetailsActivity extends AppCompatActivity implements
         setContentView(R.layout.place_details);
         mContext = this;
         mResources = getResources();
+        
+        mClient = new GoogleApiClient.Builder(this)
+                .addApi(LocationServices.API)
+                .addConnectionCallbacks(new GoogleApiClient.ConnectionCallbacks() {
+                    @Override
+                    public void onConnected(Bundle bundle) {
+                        PlaceDetailsActivity.this.invalidateOptionsMenu();
+                    }       
+
+                    @Override
+                    public void onConnectionSuspended(int i) {
+                        
+                    }
+                })
+                .build();
         
         mPlaceId = getIntent().getIntExtra(EXTRA_PLACE_POSITION, -1);
         final VisitableGenerator generator = VisitableGenerator.get(this);
@@ -143,6 +182,33 @@ public class PlaceDetailsActivity extends AppCompatActivity implements
     }
     
     @Override
+    public void onStart() {
+        super.onStart();
+        this.invalidateOptionsMenu();
+        mClient.connect();
+    }
+    
+    @Override
+    protected void onResume() {
+        super.onResume();
+
+        GoogleApiAvailability apiAvailability = GoogleApiAvailability.getInstance();
+        int errorCode = apiAvailability.isGooglePlayServicesAvailable(this);
+
+        if (errorCode != ConnectionResult.SUCCESS) {
+            Dialog errorDialog = apiAvailability
+                    .getErrorDialog(this, errorCode, REQUEST_ERROR,
+                            new DialogInterface.OnCancelListener() {
+                        @Override
+                        public void onCancel(DialogInterface dialog) {
+                            finish();
+                        }
+                    });
+            errorDialog.show();
+        }
+    }
+    
+    @Override
     public void onPause() {
         super.onPause();
         
@@ -153,12 +219,80 @@ public class PlaceDetailsActivity extends AppCompatActivity implements
                 .apply();
     }
     
+    @Override
+    public void onStop() {
+        super.onStop();
+        mClient.disconnect();
+    }
+        
+    @Override
+    public boolean onCreateOptionsMenu(Menu menu) {
+        MenuInflater inflater = getMenuInflater();
+        inflater.inflate(R.menu.place_details, menu);
+        
+        MenuItem searchItem = menu.findItem(R.id.action_locate);
+        searchItem.setEnabled(mClient.isConnected());
+        return true;
+    }
+    
+    @Override
+    public boolean onOptionsItemSelected(MenuItem item) {
+        switch (item.getItemId()) {
+            case R.id.action_locate:
+                if (hasLocationPermission()) {
+                    findCoords();
+                } else {
+                    requestPermissions(LOCATION_PERMISSIONS, REQUEST_LOCATION_PERMISSIONS);
+                }
+                return true;
+            default:
+                return super.onOptionsItemSelected(item);
+        }
+    }
+
+    @Override
+    public void onRequestPermissionsResult(int code, String[] permissions,
+            int[] grantResults) {
+        switch (code) {
+            case REQUEST_LOCATION_PERMISSIONS:
+                if (hasLocationPermission()) {
+                    findCoords();
+                }
+            default:
+                super.onRequestPermissionsResult(code, permissions, grantResults);
+        }
+    }
+    
     //We make the activity self-contained by removing the need for
     //parent fragment to know anything about the intent extras
     public static Intent newIntent(Context packageContext, int id) {
         Intent intent = new Intent(packageContext, PlaceDetailsActivity.class);
         intent.putExtra(EXTRA_PLACE_POSITION, id);
         return intent;
+    }
+    
+    private void findCoords() {
+        LocationRequest request = LocationRequest.create();
+        request.setPriority(LocationRequest.PRIORITY_HIGH_ACCURACY);
+        request.setNumUpdates(1);
+        request.setInterval(0);
+        
+        LocationServices.FusedLocationApi
+                .requestLocationUpdates(mClient, request, new LocationListener() {
+                    @Override
+                    public void onLocationChanged(Location location) {
+                        double lat = location.getLatitude();
+                        double lon = location.getLongitude();
+                        Toast.makeText(mContext, "Your coordinates are: "
+                                + lat + ", " + lon, Toast.LENGTH_LONG).show();
+                    }
+                });
+    }
+    
+    private boolean hasLocationPermission() {
+        int result = ContextCompat
+                .checkSelfPermission(mContext, LOCATION_PERMISSIONS[0]);
+        return result == PackageManager.PERMISSION_GRANTED;
     }
     
     @Override

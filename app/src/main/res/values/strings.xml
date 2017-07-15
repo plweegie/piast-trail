@@ -27,5 +27,6 @@
     <string name="visited_label">Visited</string>
     <string name="visited_checkbox_label">I was there!</string>
     
+    <string name="search">Get my location</string>
     
 </resources>
