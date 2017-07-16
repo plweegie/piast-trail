@@ -27,6 +27,9 @@
     <string name="visited_label">Visited</string>
     <string name="visited_checkbox_label">I was there!</string>
     
+    <!-- Location-related -->
     <string name="search">Get my location</string>
+    <string name="permission_rationale">Piast Trail needs to access location data to calculate your distance to attractions.</string>
+    <string name="allow">OK</string>
     
 </resources>

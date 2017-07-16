@@ -37,6 +37,8 @@ import android.net.NetworkInfo;
 import android.net.Uri;
 import android.os.Bundle;
 import android.preference.PreferenceManager;
+import android.support.v4.app.ActivityCompat;
+import android.support.v4.app.DialogFragment;
 import android.support.v4.app.LoaderManager;
 import android.support.v4.content.AsyncTaskLoader;
 import android.support.v4.content.ContextCompat;
@@ -70,7 +72,8 @@ import com.google.android.gms.location.LocationServices;
  * This activity displays the place details 
  */
 public class PlaceDetailsActivity extends AppCompatActivity implements
-        LoaderManager.LoaderCallbacks<String>{
+        LoaderManager.LoaderCallbacks<String>,
+        PermissionRationaleFragment.PermissionRationaleListener {
     
     private static final String EXTRA_PLACE_POSITION = "place_position";
     private static final int REQUEST_ERROR = 0;
@@ -78,6 +81,7 @@ public class PlaceDetailsActivity extends AppCompatActivity implements
 
     private static final String LOG_TAG = PlaceDetailsActivity.class.getName();
     private static final String WIKI_REQUEST_URL = "https://pl.wikipedia.org/w/api.php";
+    private static final String PERMISSION_RATIONALE_DIALOG = "PermissionRationaleDialog";
     
     private static final String[] LOCATION_PERMISSIONS = new String[] {
         Manifest.permission.ACCESS_FINE_LOCATION,
@@ -191,7 +195,8 @@ public class PlaceDetailsActivity extends AppCompatActivity implements
     @Override
     protected void onResume() {
         super.onResume();
-
+        
+        //checking if Play Store app installed on device
         GoogleApiAvailability apiAvailability = GoogleApiAvailability.getInstance();
         int errorCode = apiAvailability.isGooglePlayServicesAvailable(this);
 
@@ -242,7 +247,14 @@ public class PlaceDetailsActivity extends AppCompatActivity implements
                 if (hasLocationPermission()) {
                     findCoords();
                 } else {
-                    requestPermissions(LOCATION_PERMISSIONS, REQUEST_LOCATION_PERMISSIONS);
+                    if (ActivityCompat.shouldShowRequestPermissionRationale(
+                            PlaceDetailsActivity.this, LOCATION_PERMISSIONS[0])) {
+                        DialogFragment dialog = new PermissionRationaleFragment();
+                        dialog.show(getSupportFragmentManager(), PERMISSION_RATIONALE_DIALOG);
+                        
+                    } else {
+                        requestPermissions(LOCATION_PERMISSIONS, REQUEST_LOCATION_PERMISSIONS);
+                    }
                 }
                 return true;
             default:
@@ -261,6 +273,11 @@ public class PlaceDetailsActivity extends AppCompatActivity implements
             default:
                 super.onRequestPermissionsResult(code, permissions, grantResults);
         }
+    }
+    
+    @Override
+    public void onDialogPositiveClick(DialogFragment dialog) {
+        requestPermissions(LOCATION_PERMISSIONS, REQUEST_LOCATION_PERMISSIONS);
     }
     
     //We make the activity self-contained by removing the need for
