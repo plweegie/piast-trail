@@ -72,7 +72,7 @@ import com.google.android.gms.maps.GoogleMap;
 import com.google.android.gms.maps.OnMapReadyCallback;
 import com.google.android.gms.maps.SupportMapFragment;
 import com.google.android.gms.maps.model.LatLng;
-import com.google.android.gms.maps.model.LatLngBounds;
+import com.google.android.gms.maps.model.MarkerOptions;
 import org.json.JSONException;
 import org.json.JSONObject;
 
@@ -348,9 +348,12 @@ public class PlaceDetailsActivity extends AppCompatActivity implements
         }
         
         LatLng placePoint = new LatLng(mLocation.getLatitude(), mLocation.getLongitude());
+        MarkerOptions placeMarker = new MarkerOptions().position(placePoint);
         
+        mMap.clear();
         CameraUpdate update = CameraUpdateFactory.newLatLngZoom(placePoint, MAP_ZOOM_LEVEL);
         mMap.animateCamera(update);
+        mMap.addMarker(placeMarker);
     }
     
     @Override
