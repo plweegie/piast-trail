@@ -66,10 +66,13 @@ import com.google.android.gms.common.api.GoogleApiClient;
 import com.google.android.gms.location.LocationListener;
 import com.google.android.gms.location.LocationRequest;
 import com.google.android.gms.location.LocationServices;
+import com.google.android.gms.maps.CameraUpdate;
+import com.google.android.gms.maps.CameraUpdateFactory;
 import com.google.android.gms.maps.GoogleMap;
 import com.google.android.gms.maps.OnMapReadyCallback;
 import com.google.android.gms.maps.SupportMapFragment;
 import com.google.android.gms.maps.model.LatLng;
+import com.google.android.gms.maps.model.LatLngBounds;
 import org.json.JSONException;
 import org.json.JSONObject;
 
@@ -94,6 +97,8 @@ public class PlaceDetailsActivity extends AppCompatActivity implements
         Manifest.permission.ACCESS_COARSE_LOCATION,
     };
     private static final int REQUEST_LOCATION_PERMISSIONS = 0;
+    
+    private static final float MAP_ZOOM_LEVEL = 10f;
     
     private TextView mBackupEmptyView;
     private ProgressBar mIndicator;
@@ -142,6 +147,7 @@ public class PlaceDetailsActivity extends AppCompatActivity implements
             @Override
             public void onMapReady(GoogleMap map) {
                 mMap = map;
+                updateUI();
             }
         });
         
@@ -341,7 +347,10 @@ public class PlaceDetailsActivity extends AppCompatActivity implements
             return;
         }
         
-        //Will show place location on map
+        LatLng placePoint = new LatLng(mLocation.getLatitude(), mLocation.getLongitude());
+        
+        CameraUpdate update = CameraUpdateFactory.newLatLngZoom(placePoint, MAP_ZOOM_LEVEL);
+        mMap.animateCamera(update);
     }
     
     @Override
@@ -389,10 +398,14 @@ public class PlaceDetailsActivity extends AppCompatActivity implements
         mLocation.setLatitude(resultLat);
         mLocation.setLongitude(resultLon);
         mWebView.loadUrl(url);
+        updateUI();
     }
 
     @Override
     public void onLoaderReset(Loader<JSONObject> loader) {
+        
+        mLocation.setLatitude(0.0);
+        mLocation.setLongitude(0.0);
 
         mWebView.loadUrl(null);
     }
