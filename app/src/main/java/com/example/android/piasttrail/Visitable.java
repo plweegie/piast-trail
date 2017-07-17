@@ -34,6 +34,8 @@ public class Visitable {
     private int mImgResourceId;
     private int mDetailsResId;
     private boolean mVisited;
+    private double mLatitude;
+    private double mLongitude;
     
     public Visitable(int name, int imgId, int details) {
         mPlaceNameResId = name;

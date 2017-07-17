@@ -35,7 +35,7 @@ public final class QueryUtils {
     /**
      * Query the wiki API for the relevant article URL
      */
-    public static String fetchPlaceNameUrl(String requestUrl) {
+    public static JSONObject fetchPlaceNameUrl(String requestUrl) {
 
         URL url = createUrl(requestUrl);
 
@@ -45,10 +45,10 @@ public final class QueryUtils {
         } catch (IOException e) {
             Log.e(LOG_TAG, "Error closing input stream", e);
         }
+        
+        JSONObject placeNameObject = parseJSON(jsonResponse);
 
-        String placeNameUrl = parseJSON(jsonResponse);
-
-        return placeNameUrl;
+        return placeNameObject;
     }
     
     /**
@@ -122,15 +122,15 @@ public final class QueryUtils {
         return output.toString();
     }
     
-    //Convert JSON response to String representing full URL of wiki article
-    public static String parseJSON(String placeInfoJSON) {
+    //Convert JSON response to JSON object from which url and coords will be extracted
+    public static JSONObject parseJSON(String placeInfoJSON) {
         
         if (TextUtils.isEmpty(placeInfoJSON)) {
             return null;
         }
         
-        //Initialize an empty string to built output upon
-        String wikiText = "";
+        //Initialize a null JSONObject
+        JSONObject wikiPlace = null;
         
         try {
             
@@ -140,13 +140,12 @@ public final class QueryUtils {
             
             Iterator<String> pagesKeys = wikiPages.keys();
             String pageName = pagesKeys.next();
-            JSONObject wikiPlace = wikiPages.optJSONObject(pageName);
-            wikiText = wikiPlace.getString("fullurl");
+            wikiPlace = wikiPages.optJSONObject(pageName);
             
         } catch (JSONException e) {
             Log.e("QueryUtils", "Problem parsing the JSON results", e);
         }
         
-        return wikiText;
+        return wikiPlace;
     }
 }

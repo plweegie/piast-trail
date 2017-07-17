@@ -66,13 +66,19 @@ import com.google.android.gms.common.api.GoogleApiClient;
 import com.google.android.gms.location.LocationListener;
 import com.google.android.gms.location.LocationRequest;
 import com.google.android.gms.location.LocationServices;
+import com.google.android.gms.maps.GoogleMap;
+import com.google.android.gms.maps.OnMapReadyCallback;
+import com.google.android.gms.maps.SupportMapFragment;
+import com.google.android.gms.maps.model.LatLng;
+import org.json.JSONException;
+import org.json.JSONObject;
 
 /**
  *
  * This activity displays the place details 
  */
 public class PlaceDetailsActivity extends AppCompatActivity implements
-        LoaderManager.LoaderCallbacks<String>,
+        LoaderManager.LoaderCallbacks<JSONObject>,
         PermissionRationaleFragment.PermissionRationaleListener {
     
     private static final String EXTRA_PLACE_POSITION = "place_position";
@@ -95,12 +101,15 @@ public class PlaceDetailsActivity extends AppCompatActivity implements
     private Context mContext;
     private Resources mResources;
     private GoogleApiClient mClient;
+    private GoogleMap mMap;
+    private Location mLocation;
     
     private ImageView mPlaceImageViewFull;
     private TextView mPlaceCaption;
     private WebView mWebView;
     private ProgressBar mProgressBar;
     private CheckBox mVisitedCheckBox;
+    private SupportMapFragment mMapFragment;
     private Visitable mPlace;
     private int mPlaceId;
     
@@ -126,9 +135,20 @@ public class PlaceDetailsActivity extends AppCompatActivity implements
                 })
                 .build();
         
+        mMapFragment = (SupportMapFragment)
+                getSupportFragmentManager().findFragmentById(R.id.place_map);
+        
+        mMapFragment.getMapAsync(new OnMapReadyCallback() {
+            @Override
+            public void onMapReady(GoogleMap map) {
+                mMap = map;
+            }
+        });
+        
         mPlaceId = getIntent().getIntExtra(EXTRA_PLACE_POSITION, -1);
         final VisitableGenerator generator = VisitableGenerator.get(this);
         mPlace = generator.getPlace(mPlaceId);
+        mLocation = new Location("");
         
         mPlaceImageViewFull = (ImageView) findViewById(R.id.place_image_full);
         mPlaceCaption = (TextView) findViewById(R.id.place_caption_full);
@@ -300,8 +320,12 @@ public class PlaceDetailsActivity extends AppCompatActivity implements
                     public void onLocationChanged(Location location) {
                         double lat = location.getLatitude();
                         double lon = location.getLongitude();
-                        Toast.makeText(mContext, "Your coordinates are: "
-                                + lat + ", " + lon, Toast.LENGTH_LONG).show();
+                        
+                        //in kilometers
+                        float distanceToAttraction = location.distanceTo(mLocation) / 1000.0f;
+                        
+                        Toast.makeText(mContext, "You are " + distanceToAttraction
+                                + " km from this attraction.", Toast.LENGTH_LONG).show();
                     }
                 });
     }
@@ -312,8 +336,16 @@ public class PlaceDetailsActivity extends AppCompatActivity implements
         return result == PackageManager.PERMISSION_GRANTED;
     }
     
+    private void updateUI() {
+        if (mMap == null) {
+            return;
+        }
+        
+        //Will show place location on map
+    }
+    
     @Override
-    public Loader<String> onCreateLoader(int id, Bundle args) {
+    public Loader<JSONObject> onCreateLoader(int id, Bundle args) {
 
         String currentResourceId = getString(mPlace.getDetailsResId());
 
@@ -321,9 +353,9 @@ public class PlaceDetailsActivity extends AppCompatActivity implements
         Uri.Builder uriBuilder = baseUri.buildUpon();
         
         //make an API call to pl.wikipedia.org
-        //to receive full URL for given article title
+        //to receive full URL and lat-lon coordinates for given article title
         uriBuilder.appendQueryParameter("action", "query");
-        uriBuilder.appendQueryParameter("prop", "info");
+        uriBuilder.appendQueryParameter("prop", "coordinates|info");
         uriBuilder.appendQueryParameter("inprop", "url");
         uriBuilder.appendQueryParameter("titles", currentResourceId);
         uriBuilder.appendQueryParameter("format", "json");
@@ -332,23 +364,40 @@ public class PlaceDetailsActivity extends AppCompatActivity implements
     }
     
     @Override
-    public void onLoadFinished(Loader<String> loader, String result) {
+    public void onLoadFinished(Loader<JSONObject> loader, JSONObject result) {
 
         mIndicator.setVisibility(View.GONE);
         if (result == null) {
             mBackupEmptyView.setText(R.string.empty_placeholder);
             return;
         }
-        mWebView.loadUrl(result);
+        
+        String url = "";
+        double resultLat = 0.0;
+        double resultLon = 0.0;
+        
+        try {
+            url = result.getString("fullurl");
+            JSONObject coords = result.getJSONArray("coordinates").getJSONObject(0);
+            resultLat = coords.getDouble("lat");
+            resultLon = coords.getDouble("lon");
+        }
+        catch (JSONException je) {
+            Log.e(LOG_TAG, "Problem parsing the JSON results", je);
+        }
+        
+        mLocation.setLatitude(resultLat);
+        mLocation.setLongitude(resultLon);
+        mWebView.loadUrl(url);
     }
 
     @Override
-    public void onLoaderReset(Loader<String> loader) {
+    public void onLoaderReset(Loader<JSONObject> loader) {
 
         mWebView.loadUrl(null);
     }
 
-    public static class PlaceDetailsLoader extends AsyncTaskLoader<String> {
+    public static class PlaceDetailsLoader extends AsyncTaskLoader<JSONObject> {
 
         private final String LOG_TAG = PlaceDetailsLoader.class.getName();
 
@@ -365,13 +414,13 @@ public class PlaceDetailsActivity extends AppCompatActivity implements
         }
 
         @Override
-        public String loadInBackground() {
+        public JSONObject loadInBackground() {
 
             if (mRequestUrl == null) {
                 return null;
             }
 
-            String result = QueryUtils.fetchPlaceNameUrl(mRequestUrl);
+            JSONObject result = QueryUtils.fetchPlaceNameUrl(mRequestUrl);
             return result;
         }
     }
