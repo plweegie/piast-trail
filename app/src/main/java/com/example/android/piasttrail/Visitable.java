@@ -22,26 +22,30 @@ SOFTWARE.
 */
 package com.example.android.piasttrail;
 
+import android.location.Location;
+
 /**
  *
  * This class is a basic component of the model layer.
  * Because the app stores the header drawables and relevant strings locally,
- * private fields all refer to resource IDs.
+ * private fields refer to resource IDs, except for strings used to communicate
+ * with Wikimedia API
  */
 public class Visitable {
     
     private int mPlaceNameResId;
     private int mImgResourceId;
-    private int mDetailsResId;
+    private String mDetails;
     private boolean mVisited;
-    private double mLatitude;
-    private double mLongitude;
+    private Location mLocation;
+    private String mWikiUrl;
     
-    public Visitable(int name, int imgId, int details) {
+    public Visitable(int name, int imgId, String details) {
         mPlaceNameResId = name;
         mImgResourceId = imgId;
-        mDetailsResId = details;
+        mDetails = details;
         mVisited = false;
+        mLocation = new Location("");
     }
     
     public int getPlaceNameResId() {
@@ -52,8 +56,8 @@ public class Visitable {
         return mImgResourceId;
     }
     
-    public int getDetailsResId() {
-        return mDetailsResId;
+    public String getDetails() {
+        return mDetails;
     }
 
     public boolean isVisited() {
@@ -62,5 +66,22 @@ public class Visitable {
 
     public void setVisited(boolean visited) {
         mVisited = visited;
+    }
+
+    public Location getLocation() {
+        return mLocation;
+    }
+
+    public void setLocation(double lat, double lon) {
+        mLocation.setLatitude(lat);
+        mLocation.setLongitude(lon);
+    }
+
+    public String getWikiUrl() {
+        return mWikiUrl;
+    }
+    
+    public void setWikiUrl(String wikiUrl) {
+        mWikiUrl = wikiUrl;
     }
 }

@@ -44,6 +44,7 @@ public class PlaceListFragment extends Fragment {
     
     private RecyclerView mPlaceRecyclerView;
     private PlaceGridAdapter mAdapter;
+    private List<Visitable> mPlaces;
 
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup parent,
@@ -65,13 +66,13 @@ public class PlaceListFragment extends Fragment {
     }
     
     private void updateUI() {
-        final List<Visitable> places = VisitableGenerator.get(getActivity()).getPlaces();
+        mPlaces = VisitableGenerator.get(getActivity()).getPlaces();
         
         // the visited (or not) status of places is persisted in preferences
         SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(getActivity());
 
-        for (int i = 0; i < places.size(); i++) {
-            Visitable place = places.get(i);
+        for (int i = 0; i < mPlaces.size(); i++) {
+            Visitable place = mPlaces.get(i);
             String placeName = getString(place.getPlaceNameResId());
 
             if (prefs.contains(placeName)) {
@@ -80,11 +81,11 @@ public class PlaceListFragment extends Fragment {
         }
         
         if (mAdapter == null) {
-            mAdapter = new PlaceGridAdapter(places);
+            mAdapter = new PlaceGridAdapter(mPlaces);
             mAdapter.setHasStableIds(true);
             mPlaceRecyclerView.setAdapter(mAdapter);
         } else {
-            mAdapter.setPlaces(places);
+            mAdapter.setPlaces(mPlaces);
             mAdapter.notifyDataSetChanged();
         }
     }

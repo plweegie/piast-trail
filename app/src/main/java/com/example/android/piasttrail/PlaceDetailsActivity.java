@@ -34,17 +34,12 @@ import android.graphics.Bitmap;
 import android.location.Location;
 import android.net.ConnectivityManager;
 import android.net.NetworkInfo;
-import android.net.Uri;
 import android.os.Bundle;
 import android.preference.PreferenceManager;
 import android.support.v4.app.ActivityCompat;
 import android.support.v4.app.DialogFragment;
-import android.support.v4.app.LoaderManager;
-import android.support.v4.content.AsyncTaskLoader;
 import android.support.v4.content.ContextCompat;
-import android.support.v4.content.Loader;
 import android.support.v7.app.AppCompatActivity;
-import android.util.Log;
 import android.view.Menu;
 import android.view.MenuInflater;
 import android.view.MenuItem;
@@ -59,7 +54,6 @@ import android.widget.ProgressBar;
 import android.widget.TextView;
 import android.widget.Toast;
 import com.example.android.piasttrail.utils.PictureUtils;
-import com.example.android.piasttrail.utils.QueryUtils;
 import com.google.android.gms.common.ConnectionResult;
 import com.google.android.gms.common.GoogleApiAvailability;
 import com.google.android.gms.common.api.GoogleApiClient;
@@ -73,23 +67,18 @@ import com.google.android.gms.maps.OnMapReadyCallback;
 import com.google.android.gms.maps.SupportMapFragment;
 import com.google.android.gms.maps.model.LatLng;
 import com.google.android.gms.maps.model.MarkerOptions;
-import org.json.JSONException;
-import org.json.JSONObject;
 
 /**
  *
  * This activity displays the place details 
  */
 public class PlaceDetailsActivity extends AppCompatActivity implements
-        LoaderManager.LoaderCallbacks<JSONObject>,
         PermissionRationaleFragment.PermissionRationaleListener {
     
     private static final String EXTRA_PLACE_POSITION = "place_position";
     private static final int REQUEST_ERROR = 0;
-    private static final int WIKI_LOADER_ID = 1;
 
     private static final String LOG_TAG = PlaceDetailsActivity.class.getName();
-    private static final String WIKI_REQUEST_URL = "https://pl.wikipedia.org/w/api.php";
     private static final String PERMISSION_RATIONALE_DIALOG = "PermissionRationaleDialog";
     
     private static final String[] LOCATION_PERMISSIONS = new String[] {
@@ -155,6 +144,7 @@ public class PlaceDetailsActivity extends AppCompatActivity implements
         final VisitableGenerator generator = VisitableGenerator.get(this);
         mPlace = generator.getPlace(mPlaceId);
         mLocation = new Location("");
+        mLocation.set(mPlace.getLocation());
         
         mPlaceImageViewFull = (ImageView) findViewById(R.id.place_image_full);
         mPlaceCaption = (TextView) findViewById(R.id.place_caption_full);
@@ -179,6 +169,7 @@ public class PlaceDetailsActivity extends AppCompatActivity implements
             }
         });
         mWebView.setWebViewClient(new WebViewClient());
+        mWebView.loadUrl(mPlace.getWikiUrl());
         
         Bitmap bitmap = PictureUtils.decodeBitmapFromResource(getResources(),
                 mPlace.getImgResourceId(), 400, 400);
@@ -198,14 +189,10 @@ public class PlaceDetailsActivity extends AppCompatActivity implements
         
         mConnManager = (ConnectivityManager) mContext.getSystemService(Context.CONNECTIVITY_SERVICE);
         
-        LoaderManager loaderManager = getSupportLoaderManager();
-        
         NetworkInfo activeNetwork = mConnManager.getActiveNetworkInfo();
         boolean isConnected = activeNetwork != null && activeNetwork.isConnected();
         
-        if (isConnected) {
-            loaderManager.initLoader(WIKI_LOADER_ID, null, this);
-        } else {
+        if (!isConnected) {
             mIndicator.setVisibility(View.INVISIBLE);
             mBackupEmptyView.setText(R.string.empty_placeholder);
         }
@@ -354,90 +341,5 @@ public class PlaceDetailsActivity extends AppCompatActivity implements
         CameraUpdate update = CameraUpdateFactory.newLatLngZoom(placePoint, MAP_ZOOM_LEVEL);
         mMap.animateCamera(update);
         mMap.addMarker(placeMarker);
-    }
-    
-    @Override
-    public Loader<JSONObject> onCreateLoader(int id, Bundle args) {
-
-        String currentResourceId = getString(mPlace.getDetailsResId());
-
-        Uri baseUri = Uri.parse(WIKI_REQUEST_URL);
-        Uri.Builder uriBuilder = baseUri.buildUpon();
-        
-        //make an API call to pl.wikipedia.org
-        //to receive full URL and lat-lon coordinates for given article title
-        uriBuilder.appendQueryParameter("action", "query");
-        uriBuilder.appendQueryParameter("prop", "coordinates|info");
-        uriBuilder.appendQueryParameter("inprop", "url");
-        uriBuilder.appendQueryParameter("titles", currentResourceId);
-        uriBuilder.appendQueryParameter("format", "json");
-
-        return new PlaceDetailsLoader(PlaceDetailsActivity.this, uriBuilder.toString());
-    }
-    
-    @Override
-    public void onLoadFinished(Loader<JSONObject> loader, JSONObject result) {
-
-        mIndicator.setVisibility(View.GONE);
-        if (result == null) {
-            mBackupEmptyView.setText(R.string.empty_placeholder);
-            return;
-        }
-        
-        String url = "";
-        double resultLat = 0.0;
-        double resultLon = 0.0;
-        
-        try {
-            url = result.getString("fullurl");
-            JSONObject coords = result.getJSONArray("coordinates").getJSONObject(0);
-            resultLat = coords.getDouble("lat");
-            resultLon = coords.getDouble("lon");
-        }
-        catch (JSONException je) {
-            Log.e(LOG_TAG, "Problem parsing the JSON results", je);
-        }
-        
-        mLocation.setLatitude(resultLat);
-        mLocation.setLongitude(resultLon);
-        mWebView.loadUrl(url);
-        updateUI();
-    }
-
-    @Override
-    public void onLoaderReset(Loader<JSONObject> loader) {
-        
-        mLocation.setLatitude(0.0);
-        mLocation.setLongitude(0.0);
-
-        mWebView.loadUrl(null);
-    }
-
-    public static class PlaceDetailsLoader extends AsyncTaskLoader<JSONObject> {
-
-        private final String LOG_TAG = PlaceDetailsLoader.class.getName();
-
-        private String mRequestUrl;
-
-        public PlaceDetailsLoader(Context context, String url) {
-            super(context);
-            mRequestUrl = url;
-        }
-
-        @Override
-        protected void onStartLoading() {
-            forceLoad();
-        }
-
-        @Override
-        public JSONObject loadInBackground() {
-
-            if (mRequestUrl == null) {
-                return null;
-            }
-
-            JSONObject result = QueryUtils.fetchPlaceNameUrl(mRequestUrl);
-            return result;
-        }
     }
 }
