@@ -67,6 +67,7 @@ public class PlaceListFragment extends Fragment implements
     private List<Visitable> mPlaces;
     private GoogleApiClient mClient;
     private Location mLocation;
+    private boolean mWasLocationFixed;
     
     private static final String PERMISSION_RATIONALE_DIALOG = "PermissionRationaleDialog";
 
@@ -91,6 +92,7 @@ public class PlaceListFragment extends Fragment implements
         mPlaceRecyclerView.setLayoutManager(new GridLayoutManager(getActivity(), 2));
         mPlaceRecyclerView.setHasFixedSize(true);
         mLocation = new Location("");
+        mWasLocationFixed = false;
         
         mClient = new GoogleApiClient.Builder(getActivity())
                 .addApi(LocationServices.API)
@@ -208,6 +210,7 @@ public class PlaceListFragment extends Fragment implements
                         double lon = location.getLongitude();
                         mLocation.setLatitude(lat);
                         mLocation.setLongitude(lon);
+                        mWasLocationFixed = true;
                         
                         //Sort the order in which places are shown
                         //depending on how far they are from us (= by distance ascending)
@@ -260,6 +263,7 @@ public class PlaceListFragment extends Fragment implements
         
         private TextView mPlaceNameTextView;
         private TextView mVisitedTextView;
+        private TextView mDistanceTextView;
         private ImageView mPlaceImageView;
         private ImageView mIconImageView;
         private View mBackground;
@@ -271,6 +275,7 @@ public class PlaceListFragment extends Fragment implements
             
             mPlaceNameTextView = (TextView) itemView.findViewById(R.id.place_name);
             mPlaceImageView = (ImageView) itemView.findViewById(R.id.place_photo);
+            mDistanceTextView = (TextView) itemView.findViewById(R.id.place_distance);
             mBackground = itemView.findViewById(R.id.card_background);
             mVisitedTextView = (TextView) itemView.findViewById(R.id.visited_tv);
             mIconImageView = (ImageView) itemView.findViewById(R.id.check_visited);
@@ -325,8 +330,19 @@ public class PlaceListFragment extends Fragment implements
             
             holder.mIconImageView.setVisibility(visited ? View.VISIBLE : View.GONE);
             holder.mVisitedTextView.setVisibility(visited ? View.VISIBLE : View.GONE);
+            holder.mDistanceTextView.setVisibility(View.GONE);
+            
+            
+            if (mWasLocationFixed) {
+                
+                //in kilometers
+                int distanceToAttraction = 
+                        (int) place.getLocation().distanceTo(mLocation) / 1000;
+                holder.mDistanceTextView.setText(distanceToAttraction + " km");
+                holder.mDistanceTextView.setVisibility(View.VISIBLE);
+            }
         }
-
+        
         @Override
         public int getItemCount() {
             return mPlaces.size();
