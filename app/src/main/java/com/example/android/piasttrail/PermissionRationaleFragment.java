@@ -59,6 +59,6 @@ public class PermissionRationaleFragment extends DialogFragment {
     @Override
     public void onAttach(Context context) {
         super.onAttach(context);
-        mListener = (PermissionRationaleListener) context;
+        mListener = (PermissionRationaleListener) getTargetFragment();
     }
 }
